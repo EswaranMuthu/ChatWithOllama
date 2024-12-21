@@ -5,6 +5,7 @@ from haystack.components.retrievers.in_memory import InMemoryBM25Retriever
 from haystack.components.builders.prompt_builder import PromptBuilder
 from haystack.document_stores.in_memory import InMemoryDocumentStore
 from haystack.document_stores.in_memory import InMemoryDocumentStore
+import gradio as gr
 
 template = """
 Given the following information, answer the question.
@@ -49,11 +50,18 @@ pipe.add_component("llm", generator)
 pipe.connect("retriever", "prompt_builder.documents")
 pipe.connect("prompt_builder", "llm")
 
-result = pipe.run({"prompt_builder": {"query": query},
-									"retriever": {"query": query}})
+def ask_question(question):
+  result = pipe.run({"prompt_builder": {"query": question},
+									"retriever": {"query": question}})
+  return result["llm"]["replies"][0]
 
-print(result)
+gr_interface = gr.Interface(
+  fn=ask_question,
+  inputs=gr.components.Textbox(lines=2, placeholder="Enter your question here..."),
+  outputs="text"
+)
 
+gr_interface.launch()
 # {'llm': {'replies': ['Based on the provided context, it seems that you enjoy
 # soccer and summer. Unfortunately, there is no direct information given about 
 # what else you enjoy...'],
